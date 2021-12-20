@@ -1,0 +1,47 @@
+---
+title: "`r params$title`"
+author: "Alexander Brenning, Friedrich Schiller University Jena"
+date: "`r format(Sys.Date(),'%d. %B %Y')`"
+params:
+  title: "Vocabulary"
+  courses: ""
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library("kableExtra")
+library("readxl")
+d <- as.data.frame(readxl::read_excel("Statistik-Vokabular.xlsx"))
+d$Course[!is.na(d$Geo408B)] <- "Geo408B"
+d$Course[!is.na(d$Geo408A)] <- "Geo408A"
+d$Course[!is.na(d$Geog145)] <- "Geog145"
+d$Course[!is.na(d$Geog142)] <- "Geog142"
+d <- d[!is.na(d$Course),]
+
+o <- order(paste0(gsub("Geo","",gsub("Geog","",d$Course)), "_",d[,d$Course],c(1:nrow(d))))
+d <- d[o,]
+
+if (length(params$courses) > 0) if (params$courses[1] != "") {
+  sel_rows <- d$Course %in% params$courses
+} else sel_rows <- rep(TRUE, nrow(d))
+
+sel_cols <- c("English","Deutsch")
+if (length(params$courses) > 1) 
+  sel_cols <- c("Course", sel_cols)
+
+d$Course[duplicated(d$Course)] <- ""
+d <- d[ sel_rows, sel_cols ]
+rownames(d) <- NULL
+
+```
+
+
+```{r table, results = "asis", echo = FALSE}
+kbl <- knitr::kable(d, align = "lll", format = "html")
+kbl <- kable_styling(kbl, bootstrap_options = "striped",
+  full_width = TRUE)
+kbl
+
+```
